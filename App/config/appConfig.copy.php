@@ -18,7 +18,7 @@ return
 	],
     'authentication'=>
         [
-    "type"=> 'none',
+    "type"=> 'basic',
     "user"=>"switch",
     "pass"=>"switch"
     ],
