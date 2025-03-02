@@ -2,7 +2,7 @@
 // A test endpoint that echoes a successful job response
 
 use App\utils\Logger;
-spl_autoload_register(function ($class) {$path= __DIR__ . '/../../../XMPie2SwitchConnector/' .str_replace('\\', '/', $class).'.php'; require $path;});	// Setup a simple PHP autoloader
+spl_autoload_register(function ($class) {$path= __DIR__ . '/../../' .str_replace('\\', '/', $class).'.php'; require $path;});	// Setup a simple PHP autoloader
 
 Logger::info(print_r(getallheaders(), true));
 Logger::info(print_r($_SERVER, true));

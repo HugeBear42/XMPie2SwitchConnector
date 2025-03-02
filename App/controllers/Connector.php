@@ -166,7 +166,7 @@ readonly class Connector
         if( is_array($decodedResponse) && array_key_exists('status', $decodedResponse) )
         {
             $status = trim(strtolower($decodedResponse['status']));
-            return $status!=Order::ERROR ? Order::NEW : Order::ERROR;
+            return $status!=Order::ERROR ? Order::PROCESSING : Order::ERROR;
         }
         return Order::ERROR;
     }

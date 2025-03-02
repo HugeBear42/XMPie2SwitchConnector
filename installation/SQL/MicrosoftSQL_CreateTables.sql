@@ -12,7 +12,6 @@ CREATE TABLE Orders (
 	Status VARCHAR(10) NOT NULL CHECK (Status IN('new', 'processing', 'error', 'delivering', 'delivered', 'retry')),
 	TrackingId VARCHAR(1024) NOT NULL DEFAULT '',
 	Message VARCHAR(1024) NOT NULL DEFAULT '',
-	JSONFilePath VARCHAR(1024) NOT NULL DEFAULT '',
 	RetryCount INT DEFAULT 0,
 	ActualDeliveryId INT DEFAULT -1,
 	XMLOrderData VARCHAR(8000),
