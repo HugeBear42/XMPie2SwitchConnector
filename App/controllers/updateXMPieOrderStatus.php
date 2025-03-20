@@ -16,13 +16,13 @@ use App\utils\Logger;
 use App\controllers\Order;
 use App\controllers\Connector;
 
-spl_autoload_register(function ($class) {$path= __DIR__ . '/../../' .str_replace('\\', '/', $class).'.php'; require $path;});	// Setup a simple PHP autoloader
+spl_autoload_register(function ($class) {$path= BASE_PATH .str_replace('\\', '/', $class).'.php'; require $path;});	// Setup a simple PHP autoloader
 
 
 function validateStatusUpdateRequest(object $obj) : bool
 {	return property_exists( $obj, 'action') && $obj->action==='statusUpdate' && property_exists( $obj, 'orderId') && property_exists($obj, 'status') && in_array($obj->status, Order::STATUS_ARRAY);	}
 
-$configArray= require __DIR__ . '/../config/appConfig.php';
+$configArray= require BASE_PATH . '/App/config/appConfig.php';
 $debug=$configArray['debug'];	// If true, script can be run from the command-line & will retrieve XML file from the tmp folder
 Logger::setDebug($debug);
 Logger::fine(print_r(getallheaders(), true));
