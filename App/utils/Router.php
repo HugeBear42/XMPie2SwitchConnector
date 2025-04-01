@@ -45,6 +45,7 @@ class Router
             }
         }
        $this->abort();
+        return false;
     }
     function abort($code=404) : void
     {
@@ -54,3 +55,4 @@ class Router
     }
 
 }
+
