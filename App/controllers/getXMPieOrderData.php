@@ -40,7 +40,7 @@ Logger::fine(print_r($_SERVER, true));
 
 $str=file_get_contents("php://input");	// get the JSON contents
 Logger::info("--------------------------- start Switch polling request ---------------------------");
-Logger::fine("Received payload from Switch: ".(empty($str) ? "[empty payload]" : $str));
+Logger::fine("Received polling payload from Switch: ".(empty($str) ? "[empty payload]" : $str));
 $pollingRequest=null;
 if(strlen($str)>0)
 {
@@ -55,7 +55,7 @@ if( ! (is_object($pollingRequest) && validatePollingRequest($pollingRequest)) )	
 $str='';
 
 
-$ordersArray=Order::getOrderDetailsByStatus($db,$pollingRequest->jobType, $request->count ?? 10);
+$ordersArray=Order::getOrderDetailsByStatus($db,$pollingRequest->jobType, $pollingRequest->count ?? 10);
 $count=count($ordersArray);
 Logger::info("Found $count order".($count!=1 ? "s" : "")." to upload to Switch!");
 $str='';
@@ -74,5 +74,6 @@ foreach($ordersArray as $orderLine)
 $str='['.$str.']';
 $connector->sendPayload($str);
 Logger::info("--------------------------- end Switch polling request ---------------------------");
+Order::cleanup($db, $configArray['switch']['retentionDays']);
 exit;
 

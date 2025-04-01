@@ -3,7 +3,7 @@
 
 $orderId=43235;
 $status='delivering';
-$trackingId='track_12345';
+$trackingId='track_12346';
 $message="A message for order $orderId";
 if(isset($_REQUEST['orderId']) && is_numeric($_REQUEST['orderId']))
 {	$orderId=$_REQUEST['orderId'];	}
@@ -19,7 +19,7 @@ if( isset($_REQUEST['message']) )
 		$array = [['orderId'=>$orderId, 'action'=>'statusUpdate', 'status'=>$status, 'message'=>$message, 'trackingId'=>$trackingId]];
 	
 	//	$url = 'https://manchester.xmpie.net/switch/index.php';
-        $url='http://localhost:8080/updateXMPieOrderStatus';
+        $url='http://localhost:8080/switch/updateXMPieOrderStatus';
 		$payload=json_encode($array);
 		$headerArray=["Content-Type: application/json; charset=utf-8", "Authorization: Basic ".base64_encode("switch:switch")];
 		$options = array('http' => array('method' => 'POST', 'ignore_errors' => true,  'header' => $headerArray, 'content'=>$payload));

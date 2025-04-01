@@ -25,7 +25,8 @@ return
 	[
 		"dataTransfer"=>"switchwebhook",
         "url" => 'http://localhost:8080/switch/switchSimulator',
-		"allowStatusFeedback" => true
+		"allowStatusFeedback" => true,
+        "retentionDays" => 30
 	],
 	'uStore' =>
 	[

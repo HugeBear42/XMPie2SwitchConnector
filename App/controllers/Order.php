@@ -20,7 +20,7 @@ class Order
 
     public static function getOrderIdFromArray(array $array) : int
     {
-        return array_key_exists('@OrderId', $array['Order']) ? $array['Order']['@OrderId'] : $array['Order']['OrderId'];	// check if the OrderId tag is preceded by a '@'
+        return array_key_exists('@OrderId', $array['Order']) ? $array['Order']['@OrderId'] : $array['Order']['OrderId'];	// change from DisplayOrderId to OrderId check if the OrderId tag is preceded by a '@'
     }
     public static function getOrderProductIdsAsString(array $array) : string
     {
@@ -136,17 +136,34 @@ class Order
 		$limit=$db->getType()=='mysql' ? "LIMIT $limit" : "";
 		
 		$query="SELECT $top OrderId, OrderProductIds, CreationDateTime, ModificationDateTime, Status, TrackingId, Message, RetryCount, ActualDeliveryId, XMLOrderData, JSONOrderData FROM Orders WHERE Status=:Status $limit";
+		//Logger::info($query);
 		$params=['Status'=>$status];
 		return $db->query($query, $params)->get();
 	}
 
-    public static function DeleteOrder(Database $db, int $orderId) : void
+    public static function deleteOrder(Database $db, int $orderId) : void
     {
         $query="DELETE FROM Orders WHERE OrderId=:OrderId";
         $params=['OrderId'=>$orderId];
         Logger::info("About to delete order $orderId, query is $query");
         $db->query($query, $params);
         Logger::info("Database: Order $orderId deleted!");
+    }
+
+    public static function checkOrderExists(Database $db, int $orderId) : bool
+    {
+        $query="SELECT COUNT(orderId) AS total FROM Orders WHERE OrderId=:OrderId";
+        $params=['OrderId'=>$orderId];
+        $arr=$db->query($query, $params)->find();
+        return $arr['total']==1;
+    }
+    public static function cleanup(Database $db, int $days=30) : void
+    {
+        $days = ($days > 90 ) ? 90 : (max($days, 30));
+        $query="delete from orders where CreationDateTime < dateadd(day, -$days, getDate())";
+        if($db->getType()=='mysql')
+            $query="delete from orders where CreationDateTime < now() - INTERVAL $days DAY";
+        $db->query($query);
     }
 
 }

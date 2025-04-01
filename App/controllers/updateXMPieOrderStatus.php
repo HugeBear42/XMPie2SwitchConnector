@@ -26,7 +26,7 @@ $configArray= require BASE_PATH . '/App/config/appConfig.php';
 $debug=$configArray['debug'];	// If true, script can be run from the command-line & will retrieve XML file from the tmp folder
 Logger::setDebug($debug);
 Logger::fine(print_r(getallheaders(), true));
-Logger::fine(print_r($_SERVER, true));
+//Logger::fine(print_r($_SERVER, true));
 $db=null;
 try
 {   $db=new Database($configArray['db']);   }
@@ -41,7 +41,7 @@ if( !$connector->checkAuthentication() )
 
 $str=file_get_contents("php://input");	// get the JSON contents
 Logger::info("--------------------------- start Switch statusUpdate request ---------------------------");
-Logger::fine("Received payload from Switch: ".(empty($str) ? "[empty payload]" : $str));
+Logger::fine("Received status update payload from Switch: ".(empty($str) ? "[empty payload]" : $str));
 $dataArray=null;
 if(strlen($str)>0)
 {
@@ -59,34 +59,40 @@ else if(!is_array($dataArray))
 $str='';
 foreach($dataArray as $statusUpdateRequest)
 {
-    if( validateStatusUpdateRequest($statusUpdateRequest))
+	$orderId = $statusUpdateRequest->orderId;
+    if( validateStatusUpdateRequest($statusUpdateRequest) )
     {
-        $orderId = $statusUpdateRequest->orderId;
-		$order=null;
-        try
-        {   $order = new Order($db, Order::getOrderDetails( $db, $orderId));    }
-        catch (Exception $e)
-        {   Connector::dd($e);  }
-		$status=strtolower( $statusUpdateRequest->status );	// ignore upper / lowercase in status string.
-		$trackingId=$statusUpdateRequest->trackingId ?? '';
-		$message=$statusUpdateRequest->message ?? '';
+        if( Order::checkOrderExists($db, $orderId) )
+        {
+            $order = null;
+            try {
+                $order = new Order($db, Order::getOrderDetails($db, $orderId));
+            } catch (Exception $e) {
+                Connector::dd($e);
+            }
+            $status = strtolower($statusUpdateRequest->status);    // ignore upper / lowercase in status string.
+            $trackingId = $statusUpdateRequest->trackingId ?? '';
+            $message = $statusUpdateRequest->message ?? '';
 
-		$order->updateStatus($status, $message);
-        if($trackingId!=='')
-            $order->setTrackingId($trackingId);
-        if($status==Order::DELIVERING )
-        {
-            $connector = new Connector( $db, $configArray);
-            $connector->processDelivering($configArray['uStore'], $order);
+            $order->updateStatus($status, $message);
+            if ($trackingId !== '')
+                $order->setTrackingId($trackingId);
+            if ($status == Order::DELIVERING) {
+                $connector = new Connector($db, $configArray);
+                $connector->processDelivering($configArray['uStore'], $order);
+            } else if ($status == Order::DELIVERED) {
+                $connector = new Connector($db, $configArray);
+                $connector->processDelivered($configArray['uStore'], $order);
+            }
+            if (strlen($str) > 0) {
+                $str .= ',';
+            }
+            $str .= '{"orderId" : ' . $orderId . ' , "status" : "ok" , "message" : "Order status updated to ' . $status . '"}';
         }
-        else if($status==Order::DELIVERED)
+        else
         {
-            $connector = new Connector( $db, $configArray);
-            $connector->processDelivered($configArray['uStore'], $order);
+            $str .= '{"orderId" : ' . $orderId . ' , "status" : "error" , "message" : "Order not found!"}';
         }
-		if(strlen($str)>0)
-		{	$str.=',';	}
-		$str.='{"orderId" : '.$orderId.' , "status" : "ok" , "message" : "Order status updated to '.$status.'"}';
     }
     else
         $connector->printErrorMessage("Invalid JSON request found: ".json_encode($statusUpdateRequest).", the request will be ignored");
@@ -94,6 +100,8 @@ foreach($dataArray as $statusUpdateRequest)
 if(count($dataArray)>1)
 {	$str='['.$str.']';	}
 $connector->sendPayload($str);
+Logger::fine("Sent status update payload to Switch: $str");
 Logger::info("--------------------------- end Switch statusUpdate request ---------------------------");
+Order::cleanup($db, $configArray['switch']['retentionDays']);
 exit;
 

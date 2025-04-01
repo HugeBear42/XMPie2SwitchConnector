@@ -2,7 +2,7 @@
 
 /*
 	uploadOrderXML.php © 2025 frank@xmpie.com
-	A test endpoint that uploads a uStore XML file to the connector
+	An endpoint that uploads a uStore XML file to the connector
 
 	v1.00 of 2025-01-30	Genesis
 
@@ -11,6 +11,7 @@
 use App\controllers\Connector;
 use App\utils\Database;
 use App\utils\Logger;
+use App\controllers\Order;
 
 // Setup a simple PHP autoloader
 spl_autoload_register(function ($class) {$path=__DIR__.'/../../'.str_replace('\\', '/', $class).'.php'; require $path;});
@@ -72,5 +73,5 @@ if($configArray['switch']['dataTransfer']=='switchwebhook') // Upload the order 
     $status=$connector->sendJSONToSwitch($order);
     $order->updateStatus($status);
 }
-
+Order::cleanup($db, $configArray['switch']['retentionDays']);
 exit;
